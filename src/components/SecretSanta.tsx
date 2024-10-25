@@ -229,6 +229,9 @@ const SecretSanta: React.FC = () => {
                   variant="outline"
                   className="w-full"
                   onClick={addRestriction}
+                  disabled={
+                    participants.length < 2 || restrictions.length === 0
+                  }
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Restriction
@@ -239,6 +242,7 @@ const SecretSanta: React.FC = () => {
                 className="w-full"
                 onClick={startGame}
                 variant="secondary"
+                disabled={participants.length < 2}
               >
                 Start Secret Santa
               </Button>
