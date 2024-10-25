@@ -149,177 +149,183 @@ const SecretSanta: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-12 bg-neutral-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gift className="h-6 w-6" />
-          Secret Santa Generator
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-transparent pt-12 px-4">
+      <Card className="w-full max-w-md mx-auto bg-neutral-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="h-6 w-6" />
+            Secret Santa Generator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {!setupComplete ? (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Participants</h3>
-              {participants.map((participant, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={participant}
-                    onChange={(e) => updateParticipant(index, e.target.value)}
-                    placeholder="Enter name"
-                  />
-                  {participants.length > 1 && (
+          {!setupComplete ? (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Participants</h3>
+                {participants.map((participant, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={participant}
+                      onChange={(e) => updateParticipant(index, e.target.value)}
+                      placeholder="Enter name"
+                    />
+                    {participants.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeParticipant(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addParticipant}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Participant
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Restrictions</h3>
+                {restrictions.map((restriction, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={restriction.giver}
+                      onChange={(e) =>
+                        updateRestriction(index, "giver", e.target.value)
+                      }
+                      placeholder="Cannot give"
+                    />
+                    <Input
+                      value={restriction.restricted}
+                      onChange={(e) =>
+                        updateRestriction(index, "restricted", e.target.value)
+                      }
+                      placeholder="To this person"
+                    />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeParticipant(index)}
+                      onClick={() => removeRestriction(index)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={addParticipant}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Participant
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Restrictions</h3>
-              {restrictions.map((restriction, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={restriction.giver}
-                    onChange={(e) =>
-                      updateRestriction(index, "giver", e.target.value)
-                    }
-                    placeholder="Cannot give"
-                  />
-                  <Input
-                    value={restriction.restricted}
-                    onChange={(e) =>
-                      updateRestriction(index, "restricted", e.target.value)
-                    }
-                    placeholder="To this person"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRestriction(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={addRestriction}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Restriction
-              </Button>
-            </div>
-
-            <Button className="w-full" onClick={startGame} variant="secondary">
-              Start Secret Santa
-            </Button>
-          </div>
-        ) : Object.keys(assignments).length === 0 ? (
-          <div className="space-y-4">
-            <div className="text-sm space-y-1">
-              <p>Participants:</p>
-              <ul className="list-disc pl-4">
-                {participants.map((name) => (
-                  <li key={name}>{name}</li>
+                  </div>
                 ))}
-              </ul>
-            </div>
-            <div className="text-sm space-y-1">
-              <p>Restrictions:</p>
-              <ul className="list-disc pl-4">
-                {restrictions
-                  .filter((r) => r.giver && r.restricted)
-                  .map((r, index) => (
-                    <li key={index}>
-                      {r.giver} cannot gift to: {r.restricted}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-            <Button
-              className="w-full flex items-center justify-center gap-2"
-              onClick={shuffleAssignments}
-              variant="secondary"
-            >
-              <Shuffle className="h-4 w-4" />
-              Generate Assignments
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-lg font-medium">
-                Round {currentRound + 1} of {participants.length}
-              </p>
-              <p className="text-sm text-gray-500">
-                It's {getCurrentParticipant()}'s turn
-              </p>
-            </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addRestriction}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Restriction
+                </Button>
+              </div>
 
-            {!showResult ? (
               <Button
                 className="w-full"
-                onClick={() => setShowResult(true)}
+                onClick={startGame}
                 variant="secondary"
               >
-                Reveal My Secret Santa
+                Start Secret Santa
               </Button>
-            ) : (
-              <div className="space-y-4">
-                <Alert>
-                  <AlertDescription className="text-center">
-                    {getCurrentParticipant()}, you will be buying a gift for{" "}
-                    <span className="font-bold">
-                      {assignments[getCurrentParticipant()]}
-                    </span>
-                  </AlertDescription>
-                </Alert>
-
-                {currentRound < participants.length - 1 ? (
-                  <Button
-                    className="w-full"
-                    onClick={nextRound}
-                    variant="secondary"
-                  >
-                    Next Person
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full"
-                    onClick={resetGame}
-                    variant="secondary"
-                  >
-                    Start Over
-                  </Button>
-                )}
+            </div>
+          ) : Object.keys(assignments).length === 0 ? (
+            <div className="space-y-4">
+              <div className="text-sm space-y-1">
+                <p>Participants:</p>
+                <ul className="list-disc pl-4">
+                  {participants.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ul>
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className="text-sm space-y-1">
+                <p>Restrictions:</p>
+                <ul className="list-disc pl-4">
+                  {restrictions
+                    .filter((r) => r.giver && r.restricted)
+                    .map((r, index) => (
+                      <li key={index}>
+                        {r.giver} cannot gift to: {r.restricted}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              <Button
+                className="w-full flex items-center justify-center gap-2"
+                onClick={shuffleAssignments}
+                variant="secondary"
+              >
+                <Shuffle className="h-4 w-4" />
+                Generate Assignments
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-lg font-medium">
+                  Round {currentRound + 1} of {participants.length}
+                </p>
+                <p className="text-sm text-gray-500">
+                  It's {getCurrentParticipant()}'s turn
+                </p>
+              </div>
+
+              {!showResult ? (
+                <Button
+                  className="w-full"
+                  onClick={() => setShowResult(true)}
+                  variant="secondary"
+                >
+                  Reveal My Secret Santa
+                </Button>
+              ) : (
+                <div className="space-y-4">
+                  <Alert>
+                    <AlertDescription className="text-center">
+                      {getCurrentParticipant()}, you will be buying a gift for{" "}
+                      <span className="font-bold">
+                        {assignments[getCurrentParticipant()]}
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+
+                  {currentRound < participants.length - 1 ? (
+                    <Button
+                      className="w-full"
+                      onClick={nextRound}
+                      variant="secondary"
+                    >
+                      Next Person
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={resetGame}
+                      variant="secondary"
+                    >
+                      Start Over
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
