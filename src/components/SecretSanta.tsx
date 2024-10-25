@@ -68,7 +68,9 @@ const SecretSanta: React.FC = () => {
       return;
     }
 
-    const restrictionsMap = {};
+    const restrictionsMap: {
+      [key: string]: string[];
+    } = {};
     restrictions.forEach(({ giver, restricted }) => {
       if (giver && restricted) {
         if (!restrictionsMap[giver]) {
