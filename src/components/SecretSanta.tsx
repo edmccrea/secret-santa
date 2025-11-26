@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gift, Shuffle, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { RestrictionGrid } from "./RestrictionGrid";
 
 interface Restriction {
   giver: string;
@@ -16,7 +18,7 @@ interface Assignments {
 
 const SecretSanta: React.FC = () => {
   const [setupComplete, setSetupComplete] = useState<boolean>(false);
-  const [participants, setParticipants] = useState<string[]>([""]);
+  const [participants, setParticipants] = useState<string[]>([]);
   const [restrictions, setRestrictions] = useState<Restriction[]>([
     { giver: "", restricted: "" },
   ]);
@@ -25,41 +27,46 @@ const SecretSanta: React.FC = () => {
   const [showResult, setShowResult] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
+  const toggleRestriction = (giver: string, restricted: string) => {
+    const exists = restrictions.some(
+      (r) => r.giver === giver && r.restricted === restricted
+    );
+
+    if (exists) {
+      setRestrictions(
+        restrictions.filter(
+          (r) => !(r.giver === giver && r.restricted === restricted)
+        )
+      );
+    } else {
+      setRestrictions([...restrictions, { giver, restricted }]);
+    }
+  };
+
+  const [newParticipant, setNewParticipant] = useState("");
+
   const addParticipant = () => {
-    setParticipants([...participants, ""]);
+    if (newParticipant.trim()) {
+      setParticipants([...participants, newParticipant.trim()]);
+      setNewParticipant("");
+    }
   };
 
   const removeParticipant = (index: number) => {
     const newParticipants = [...participants];
+    const participantToRemove = newParticipants[index];
     newParticipants.splice(index, 1);
     setParticipants(newParticipants);
+    
+    // Also remove any restrictions involving this participant
+    if (participantToRemove) {
+      setRestrictions(restrictions.filter(
+        r => r.giver !== participantToRemove && r.restricted !== participantToRemove
+      ));
+    }
   };
 
-  const updateParticipant = (index: number, value: string) => {
-    const newParticipants = [...participants];
-    newParticipants[index] = value;
-    setParticipants(newParticipants);
-  };
 
-  const addRestriction = () => {
-    setRestrictions([...restrictions, { giver: "", restricted: "" }]);
-  };
-
-  const removeRestriction = (index: number) => {
-    const newRestrictions = [...restrictions];
-    newRestrictions.splice(index, 1);
-    setRestrictions(newRestrictions);
-  };
-
-  const updateRestriction = (
-    index: number,
-    field: keyof Restriction,
-    value: string,
-  ) => {
-    const newRestrictions = [...restrictions];
-    newRestrictions[index][field] = value;
-    setRestrictions(newRestrictions);
-  };
 
   const startGame = () => {
     const validParticipants = participants.filter((p) => p.trim());
@@ -85,14 +92,12 @@ const SecretSanta: React.FC = () => {
   };
 
   const shuffleAssignments = () => {
-    const available = [...participants];
-    const newAssignments = {};
     let attempts = 0;
     const maxAttempts = 100;
 
     while (attempts < maxAttempts) {
       let success = true;
-      const tempAssignments = {};
+      const tempAssignments: Assignments = {};
       const remainingRecipients = [...participants];
 
       for (const giver of participants) {
@@ -152,7 +157,7 @@ const SecretSanta: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-transparent pt-12 px-4">
-      <Card className="w-full max-w-md mx-auto bg-neutral-50">
+      <Card className="w-full max-w-2xl mx-auto bg-neutral-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gift className="h-6 w-6" />
@@ -167,75 +172,58 @@ const SecretSanta: React.FC = () => {
           )}
 
           {!setupComplete ? (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Participants</h3>
-                {participants.map((participant, index) => (
-                  <div key={index} className="flex gap-2">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Participants</h3>
+                  <div className="flex gap-2">
                     <Input
-                      value={participant}
-                      onChange={(e) => updateParticipant(index, e.target.value)}
-                      placeholder="Enter name"
+                      value={newParticipant}
+                      onChange={(e) => setNewParticipant(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          addParticipant();
+                        }
+                      }}
+                      placeholder="Enter name and press Enter"
                     />
-                    {participants.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeParticipant(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={addParticipant}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Participant
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Restrictions</h3>
-                {restrictions.map((restriction, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={restriction.giver}
-                      onChange={(e) =>
-                        updateRestriction(index, "giver", e.target.value)
-                      }
-                      placeholder="Cannot give"
-                    />
-                    <Input
-                      value={restriction.restricted}
-                      onChange={(e) =>
-                        updateRestriction(index, "restricted", e.target.value)
-                      }
-                      placeholder="To this person"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeRestriction(index)}
-                    >
-                      <X className="h-4 w-4" />
+                    <Button onClick={addParticipant} size="icon">
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={addRestriction}
-                  disabled={
-                    participants.length < 2 || restrictions.length === 0
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Restriction
-                </Button>
+                  
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {participants.map((participant, index) => (
+                      <Badge key={index} variant="secondary" className="pl-2 pr-1 py-0.5 h-6 text-xs gap-1">
+                        {participant}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-3 w-3 hover:bg-destructive/20 hover:text-destructive rounded-full"
+                          onClick={() => removeParticipant(index)}
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </Button>
+                      </Badge>
+                    ))}
+                    {participants.length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">No participants added yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                <h3 className="text-sm font-medium">Restrictions</h3>
+                {participants.filter(p => p.trim()).length >= 2 ? (
+                  <RestrictionGrid
+                    participants={participants.filter(p => p.trim())}
+                    restrictions={restrictions}
+                    onToggleRestriction={toggleRestriction}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Add at least 2 participants to set restrictions.
+                  </p>
+                )}
               </div>
 
               <Button
@@ -269,14 +257,23 @@ const SecretSanta: React.FC = () => {
                     ))}
                 </ul>
               </div>
-              <Button
-                className="w-full flex items-center justify-center gap-2"
-                onClick={shuffleAssignments}
-                variant="secondary"
-              >
-                <Shuffle className="h-4 w-4" />
-                Generate Assignments
-              </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => setSetupComplete(false)}
+                    variant="outline"
+                  >
+                    Back to Setup
+                  </Button>
+                  <Button
+                    className="flex-1 flex items-center justify-center gap-2"
+                    onClick={shuffleAssignments}
+                    variant="secondary"
+                  >
+                    <Shuffle className="h-4 w-4" />
+                    Generate Assignments
+                  </Button>
+                </div>
             </div>
           ) : (
             <div className="space-y-4">
