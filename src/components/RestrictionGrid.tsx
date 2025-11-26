@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface RestrictionGridProps {
@@ -47,8 +48,9 @@ export const RestrictionGrid: React.FC<RestrictionGridProps> = ({
                 const restricted = isRestricted(giver, receiver);
 
                 return (
-                  <div
+                  <motion.div
                     key={`cell-${rowIndex}-${colIndex}`}
+                    whileTap={{ scale: 0.9 }}
                     className={cn(
                       "border border-muted/50 flex items-center justify-center h-10 w-full transition-colors",
                       isSelf ? "bg-neutral-200 dark:bg-neutral-800 cursor-not-allowed" : "cursor-pointer hover:bg-muted/30",
@@ -63,7 +65,7 @@ export const RestrictionGrid: React.FC<RestrictionGridProps> = ({
                     ) : (
                       <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-muted-foreground/20" />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </React.Fragment>

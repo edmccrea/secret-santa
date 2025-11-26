@@ -6,6 +6,7 @@ import { Gift, Shuffle, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RestrictionGrid } from "./RestrictionGrid";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Restriction {
   giver: string;
@@ -26,6 +27,7 @@ const SecretSanta: React.FC = () => {
   const [currentRound, setCurrentRound] = useState<number>(0);
   const [showResult, setShowResult] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [isShuffling, setIsShuffling] = useState<boolean>(false);
 
   const toggleRestriction = (giver: string, restricted: string) => {
     const exists = restrictions.some(
@@ -92,48 +94,55 @@ const SecretSanta: React.FC = () => {
   };
 
   const shuffleAssignments = () => {
-    let attempts = 0;
-    const maxAttempts = 100;
+    setIsShuffling(true);
+    
+    // Simulate shuffling delay for animation
+    setTimeout(() => {
+      let attempts = 0;
+      const maxAttempts = 100;
 
-    while (attempts < maxAttempts) {
-      let success = true;
-      const tempAssignments: Assignments = {};
-      const remainingRecipients = [...participants];
+      while (attempts < maxAttempts) {
+        let success = true;
+        const tempAssignments: Assignments = {};
+        const remainingRecipients = [...participants];
 
-      for (const giver of participants) {
-        const validRecipients = remainingRecipients.filter(
-          (recipient) =>
-            recipient !== giver &&
-            !restrictions.some(
-              (r) => r.giver === giver && r.restricted === recipient,
-            ),
-        );
+        for (const giver of participants) {
+          const validRecipients = remainingRecipients.filter(
+            (recipient) =>
+              recipient !== giver &&
+              !restrictions.some(
+                (r) => r.giver === giver && r.restricted === recipient,
+              ),
+          );
 
-        if (validRecipients.length === 0) {
-          success = false;
-          break;
+          if (validRecipients.length === 0) {
+            success = false;
+            break;
+          }
+
+          const randomIndex = Math.floor(Math.random() * validRecipients.length);
+          const recipient = validRecipients[randomIndex];
+          tempAssignments[giver] = recipient;
+          remainingRecipients.splice(remainingRecipients.indexOf(recipient), 1);
         }
 
-        const randomIndex = Math.floor(Math.random() * validRecipients.length);
-        const recipient = validRecipients[randomIndex];
-        tempAssignments[giver] = recipient;
-        remainingRecipients.splice(remainingRecipients.indexOf(recipient), 1);
+        if (success) {
+          setAssignments(tempAssignments);
+          setCurrentRound(0);
+          setShowResult(false);
+          setError("");
+          setIsShuffling(false);
+          return;
+        }
+
+        attempts++;
       }
 
-      if (success) {
-        setAssignments(tempAssignments);
-        setCurrentRound(0);
-        setShowResult(false);
-        setError("");
-        return;
-      }
-
-      attempts++;
-    }
-
-    setError(
-      "Could not find valid assignments. Please try again or adjust restrictions.",
-    );
+      setError(
+        "Could not find valid assignments. Please try again or adjust restrictions.",
+      );
+      setIsShuffling(false);
+    }, 1500);
   };
 
   const nextRound = () => {
@@ -151,7 +160,7 @@ const SecretSanta: React.FC = () => {
     setShowResult(false);
     setError("");
     setSetupComplete(false);
-    setParticipants([""]);
+    setParticipants([]);
     setRestrictions([{ giver: "", restricted: "" }]);
   };
 
@@ -192,19 +201,29 @@ const SecretSanta: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {participants.map((participant, index) => (
-                      <Badge key={index} variant="secondary" className="pl-2 pr-1 py-0.5 h-6 text-xs gap-1">
-                        {participant}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-3 w-3 hover:bg-destructive/20 hover:text-destructive rounded-full"
-                          onClick={() => removeParticipant(index)}
+                    <AnimatePresence>
+                      {participants.map((participant, index) => (
+                        <motion.div
+                          key={participant}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          layout
                         >
-                          <X className="h-2.5 w-2.5" />
-                        </Button>
-                      </Badge>
-                    ))}
+                          <Badge variant="secondary" className="pl-2 pr-1 py-0.5 h-6 text-xs gap-1">
+                            {participant}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 hover:bg-destructive/20 hover:text-destructive rounded-full"
+                              onClick={() => removeParticipant(index)}
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </Button>
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                     {participants.length === 0 && (
                       <p className="text-sm text-muted-foreground italic">No participants added yet.</p>
                     )}
@@ -236,45 +255,59 @@ const SecretSanta: React.FC = () => {
               </Button>
             </div>
           ) : Object.keys(assignments).length === 0 ? (
-            <div className="space-y-4">
-              <div className="text-sm space-y-1">
-                <p>Participants:</p>
-                <ul className="list-disc pl-4">
-                  {participants.map((name) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
+              <div className="space-y-4">
+                {isShuffling ? (
+                  <div className="text-center py-12 space-y-4">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Shuffle className="h-12 w-12 mx-auto text-primary" />
+                    </motion.div>
+                    <p className="text-lg font-medium animate-pulse">Shuffling names...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-sm space-y-1">
+                      <p>Participants:</p>
+                      <ul className="list-disc pl-4">
+                        {participants.map((name) => (
+                          <li key={name}>{name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      <p>Restrictions:</p>
+                      <ul className="list-disc pl-4">
+                        {restrictions
+                          .filter((r) => r.giver && r.restricted)
+                          .map((r, index) => (
+                            <li key={index}>
+                              {r.giver} cannot gift to: {r.restricted}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={() => setSetupComplete(false)}
+                        variant="outline"
+                      >
+                        Back to Setup
+                      </Button>
+                      <Button
+                        className="flex-1 flex items-center justify-center gap-2"
+                        onClick={shuffleAssignments}
+                        variant="secondary"
+                      >
+                        <Shuffle className="h-4 w-4" />
+                        Generate Assignments
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="text-sm space-y-1">
-                <p>Restrictions:</p>
-                <ul className="list-disc pl-4">
-                  {restrictions
-                    .filter((r) => r.giver && r.restricted)
-                    .map((r, index) => (
-                      <li key={index}>
-                        {r.giver} cannot gift to: {r.restricted}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1"
-                    onClick={() => setSetupComplete(false)}
-                    variant="outline"
-                  >
-                    Back to Setup
-                  </Button>
-                  <Button
-                    className="flex-1 flex items-center justify-center gap-2"
-                    onClick={shuffleAssignments}
-                    variant="secondary"
-                  >
-                    <Shuffle className="h-4 w-4" />
-                    Generate Assignments
-                  </Button>
-                </div>
-            </div>
           ) : (
             <div className="space-y-4">
               <div className="text-center">
@@ -295,16 +328,20 @@ const SecretSanta: React.FC = () => {
                   Reveal My Secret Santa
                 </Button>
               ) : (
-                <div className="space-y-4">
-                  <Alert>
-                    <AlertDescription className="text-center">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <Alert className="bg-green-50 border-green-200">
+                    <AlertDescription className="text-center text-lg py-2">
                       {getCurrentParticipant()}, you will be buying a gift for{" "}
-                      <span className="font-bold">
+                      <span className="font-bold text-green-700 block text-2xl mt-2">
                         {assignments[getCurrentParticipant()]}
                       </span>
                     </AlertDescription>
                   </Alert>
-
+ 
                   {currentRound < participants.length - 1 ? (
                     <Button
                       className="w-full"
@@ -322,7 +359,7 @@ const SecretSanta: React.FC = () => {
                       Start Over
                     </Button>
                   )}
-                </div>
+                </motion.div>
               )}
             </div>
           )}
