@@ -268,26 +268,49 @@ const SecretSanta: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="text-sm space-y-1">
-                      <p>Participants:</p>
-                      <ul className="list-disc pl-4">
-                        {participants.map((name) => (
-                          <li key={name}>{name}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="text-sm space-y-1">
-                      <p>Restrictions:</p>
-                      <ul className="list-disc pl-4">
-                        {restrictions
-                          .filter((r) => r.giver && r.restricted)
-                          .map((r, index) => (
-                            <li key={index}>
-                              {r.giver} cannot gift to: {r.restricted}
-                            </li>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg border border-neutral-200 p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Gift className="h-4 w-4 text-primary" />
+                          <h3 className="font-semibold text-sm">Participants</h3>
+                          <span className="ml-auto text-xs text-muted-foreground bg-neutral-100 px-2 py-0.5 rounded-full">
+                            {participants.length}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {participants.map((name) => (
+                            <Badge key={name} variant="secondary" className="text-sm">
+                              {name}
+                            </Badge>
                           ))}
-                      </ul>
+                        </div>
+                      </div>
+
+                      {restrictions.filter((r) => r.giver && r.restricted).length > 0 && (
+                        <div className="bg-white rounded-lg border border-neutral-200 p-4 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <X className="h-4 w-4 text-destructive" />
+                            <h3 className="font-semibold text-sm">Restrictions</h3>
+                            <span className="ml-auto text-xs text-muted-foreground bg-neutral-100 px-2 py-0.5 rounded-full">
+                              {restrictions.filter((r) => r.giver && r.restricted).length}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {restrictions
+                              .filter((r) => r.giver && r.restricted)
+                              .map((r, index) => (
+                                <div key={index} className="text-sm flex items-center gap-2 text-muted-foreground">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-destructive/50" />
+                                  <span className="font-medium text-foreground">{r.giver}</span>
+                                  <span className="text-xs">→</span>
+                                  <span className="line-through">{r.restricted}</span>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                     <div className="flex gap-2">
                       <Button
                         className="flex-1"
